@@ -1,0 +1,92 @@
+From 14733ca7b000be7cc946ea2fd4a4eddff9b37646 Mon Sep 17 00:00:00 2001
+From: happysmile12321 <812024380@qq.com>
+Date: Mon, 5 Oct 2020 22:12:50 +0800
+Subject: [PATCH] no wait autostart
+
+---
+ config.mk |   2 +-
+ dwm.c     |  34 ++++++++++++++++
+ 2 files changed, 150 insertions(+), 1 deletion(-)
+
+diff --git a/config.mk b/config.mk
+index 7084c33..4c51a21 100644
+--- a/config.mk
++++ b/config.mk
+@@ -22,7 +22,7 @@ FREETYPEINC = /usr/include/freetype2
+ 
+ # includes and libs
+ INCS = -I${X11INC} -I${FREETYPEINC}
+-LIBS = -L${X11LIB} -lX11 ${XINERAMALIBS} ${FREETYPELIBS}
++LIBS = -L${X11LIB} -lX11 ${XINERAMALIBS} ${FREETYPELIBS} -lpthread 
+ 
+
+diff --git a/dwm.c b/dwm.c
+index 664c527..fd61cc7 100644
+--- a/dwm.c
++++ b/dwm.c
+@@ -40,6 +40,8 @@
+ #include <X11/extensions/Xinerama.h>
+ #endif /* XINERAMA */
+ #include <X11/Xft/Xft.h>
++#include <semaphore.h>
++#include <pthread.h>
+ 
+ #include "drw.h"
+ #include "util.h"
+@@ -194,6 +196,8 @@ static void resizeclient(Client *c, int x, int y, int w, int h);
+ static void resizemouse(const Arg *arg);
+ static void restack(Monitor *m);
+ static void run(void);
++static void runautonowaitstartthread(void);
++static void runautonowaitstart(void);
+ static void scan(void);
+ static int sendevent(Client *c, Atom proto);
+ static void sendmon(Client *c, Monitor *m);
+@@ -1381,6 +1385,35 @@ run(void)
+ 			handler[ev.type](&ev); /* call handler */
+ }
+ 
++/*a thread , can do start tasks no wait.
++ * */
++void
++runautonowaitstartthread(void)
++{
++	system("cd ~/.dwm; ./autostart.sh &");
++}
++
++/*run the thread
++ * */
++void
++runautonowaitstart(void)
++{
++	sem_t s;
++	pthread_t thread;
++	if(pthread_create(&thread,NULL,runautonowaitstartthread,NULL)<0)
++	{
++	    perror("runautonowaitstart:create thread error!");
++	    exit(-1);
++	}
++    pthread_join(thread, NULL);
++	if(sem_init(&s,0,1)<0)
++	{
++		perror("runautonowaitstart:sem_init_error!");
++		exit(1);
++	}
++
++}
++
+ void
+ scan(void)
+ {
+@@ -2145,6 +2178,7 @@ main(int argc, char *argv[])
+ 		die("pledge");
+ #endif /* __OpenBSD__ */
+ 	scan();
++	runautonowaitstart();
+ 	run();
+ 	cleanup();
+ 	XCloseDisplay(dpy);
+
+-- 
+2.28.0
+
