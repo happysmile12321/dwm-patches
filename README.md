@@ -22,3 +22,6 @@ I write some patches based on dwm6.It's so difficult to send email to suckless.o
 		* If your dwm is really slow,then you can patch this.
 		* 这个脚本创建了一个线程。当你用dwmblock或者别的什么启动脚本的时候，你就不需要等待了。
 		* 如果你的dwm真的很慢，那就打上它。
+- ./dwm-enablecoloremoji-20200303-61bb8b2.diff
+		* This can allow you use colored emoji.
+		* 这个脚本允许你使用彩色的emoji.
